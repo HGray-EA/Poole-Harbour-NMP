@@ -1,8 +1,16 @@
 # Monitoring in Poole Harbour
-
+library(sf)
 
 # Load in WIMS for CAT
 source("WIMS_Transform_Script.R")
+source("Catch_Set_Up.R")
+
+# Load your data
+CDE <- read.csv("/dbfs/mnt/lab/unrestricted/harry.gray@environment-agency.gov.uk/CEP/WFD_Wessex_2024.csv")
+
+CDE %<>% 
+  filter(Operational.Catchment == unique(CAT$OPCAT_NAME)) %>% 
+  inner_join(CAT_geo, ., by = c("WB_ID" = "Water.Body.ID"))
 
 
 # We display most recent 2 years after the last classifications. 
@@ -18,6 +26,7 @@ WIMS_P <- WIMS_CAT_22 %>% filter(
   mutate(Mean_P = round(mean(result),2),
          Mean_count = n()) %>% 
   ungroup()
+
 #2 CDE Transforms
 CDE_P <- CDE %>% filter(Classification.Item == "Phosphate" & Year == "2022")
 
@@ -119,6 +128,17 @@ plotly::ggplotly(v)  %>%
 
 
 ##### Monitoring points on a map 2022-2025
+
+
+# We now have a dataset for hourly spills within 2022 which is linked to locations. 
+library(leaflet.extras)
+
+# Define log-scaled bins for numeric data
+binz <-c(0,0.05,0.1,0.2,0.5,1,2,5,10,Inf)
+
+# Create a color palette using colorBin for numeric data
+pal_p <- colorBin(palette = "inferno", domain = WIMS_P$result, bins = binz, reverse=TRUE )
+
 
 leaflet() %>%
   addProviderTiles(providers$Esri, group="Esri Basemap") %>% 

@@ -7,7 +7,7 @@ WIMS <-  read.csv("/dbfs/FileStore/WSX_HGray/Wessex_WIMS_monthly_scheduled.csv")
 WIMS %<>% st_as_sf(coords= c("sample.samplingPoint.easting", "sample.samplingPoint.northing"), crs=27700) %>% 
   filter(!is.na("sample.samplingPoint.easting") &!is.na("sample.samplingPoint.northing")) 
 
-CAT <- catch[catch$OPCAT_NAME == "Poole Harbour Rivers",]
+source("Catch_Set_Up.R")
 
 # Transform CAT so can join in planar geoms.  
 CAT_W <-st_transform(CAT, st_crs(27700))
