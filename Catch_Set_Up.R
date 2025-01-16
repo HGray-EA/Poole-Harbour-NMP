@@ -5,11 +5,15 @@ library(leaflet)
 library(lubridate)
 
 
-catch <- read_sf("/dbfs/mnt/lab/unrestricted/harry.gray@environment-agency.gov.uk/Interim_WFD_2022.shp")# Catchment shapefiles
-#CAT <- catch[catch$OPCAT_NAME %in% c("Poole Harbour Rivers", "Stour Dorset"),]
+    catch <- read_sf("/dbfs/mnt/lab/unrestricted/harry.gray@environment-agency.gov.uk/Interim_WFD_2022.shp")# Catchment shapefiles
+    CAT_PHR <- catch[catch$OPCAT_NAME %in% c("Poole Harbour Rivers"),]
+    
+    catch_Trac <- read_sf("/dbfs/FileStore/WSX_HGray/WFD_Transitional_Water_Bodies_Cycle_3.shp") 
+    CAT_PH <- catch_Trac[catch_Trac$OPCAT_NAME == "Poole Harbour Rivers TraC",] 
 
-catch_Trac <- read_sf("/dbfs/FileStore/WSX_HGray/WFD_Transitional_Water_Bodies_Cycle_3.shp") 
-CAT <- catch_Trac[catch_Trac$OPCAT_NAME == "Poole Harbour Rivers TraC",] 
+CAT <- rbind(CAT_PHR,CAT_PH)
+
+
 
 
 CAT_Union <- st_union(CAT) %>% 
@@ -19,10 +23,7 @@ CAT_Union <- st_union(CAT) %>%
 
 CAT_27700 <- CAT
 
-
 CAT <- CAT %>%  st_transform(4326)
-
-
 
 CPS <- read.csv("/dbfs/mnt/lab/unrestricted/harry.gray@environment-agency.gov.uk/ETL_Exports/CPS_101024_wMeasures.csv")
 
@@ -95,3 +96,4 @@ Layers_JS <- "function(el, x) {
                 });
               });
             }"
+
