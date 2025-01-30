@@ -1,0 +1,47 @@
+library(httr)
+library(jsonlite)
+    
+  #  "0111", "9901", "0119", "0348", "0116", "0117",
+    
+    Deters = c("0180", "9924")
+    Years = c(paste0(2020:format(Sys.Date(), "%Y")))
+    
+# Set initial skeleton   
+    build <- data.frame()
+    
+    # Loop through the Deters and Years vectors
+    for(x in 1:length(Deters)){
+      for(z in 1:length(Years)){
+        
+        tryCatch({
+          base_url <- "http://environment.data.gov.uk/water-quality/"
+          ending <- paste0("data/measurement?_limit=999999&area=6-28&determinand=", Deters[x], "&year=", Years[z]) # filters all samples of orthophosphate.
+          
+          url <- paste0(base_url, ending)
+          
+          A_stations <- GET(url) 
+          
+          # Check if the status code is 200
+          if(A_stations$status_code == 200){
+            api_char <- rawToChar(A_stations$content)
+            api <- fromJSON(api_char, flatten = TRUE)
+            
+            # Extract items
+            api_it <- api$items
+            
+            # Append to empty data frame
+            build <- rbind(build, api_it)
+            
+            print(paste0("Year: ", Years[z], "/", Deters[x], " - Rows: ", dim(build)[1], " Cols: ", dim(build)[2]))
+          } else {
+            warning("Status code not 200 for URL: ", url)
+          }
+          
+        }, error = function(e) {
+          cat("ERROR :", conditionMessage(e), "\n")
+        })
+        
+      }
+    }
+    
+    
