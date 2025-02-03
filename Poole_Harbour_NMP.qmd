@@ -233,3 +233,88 @@ ggplot(W_Sites, aes(date_time, result), col= result)+geom_point()+facet_wrap(~sa
 
 A Generalised Additive Model was 
 
+{r, River Frome Water Quality Plots}
+library(MetBrewer)
+library(mgcv) 
+library(cowplot)
+
+wqsite<-"SW-50590127"#River Frome at Holme Bridge
+
+startDate="2000-01-01"
+endDate="2025-02-03"
+
+param.units="mg/l"
+
+
+det="0118"#OrthoP #0116
+
+#read water quality data from online WQ archive
+F.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+  mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
+  mutate(Date=date(date.time))%>%
+  rename(Result=result)%>%
+  rename(Remark=resultQualifier.notation)%>%
+  select(Date,Remark,Result)%>%
+  group_by(Date,Remark)%>%
+  summarise(Result=mean(Result))%>%
+  arrange(Date) %>% 
+  filter(Date > "2015-01-01")
+
+  gam_FO <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = F.O.wq.data)
+  
+    future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
+  
+  #Predict
+      future_dates$Predicted_Result <- predict(gam_FO, newdata = future_dates, type = "response")
+  
+
+A <- ggplot(F.O.wq.data, aes(x = Date, y = Result)) +
+  geom_point(alpha = 0.2, col = "#c24f00") +
+  geom_rug(sides = "l", alpha = 0.2) +  
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="red")+
+  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = "dashed") +
+  labs(title = "GAM Prediction for Orthophosphate",
+       x = "Date",
+       y = "Orthophosphate (mg/L)")
+
+
+det="0116"#OrthoP #0116
+
+#read water quality data from online WQ archive
+F.TotN.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+  mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
+  mutate(Date=date(date.time))%>%
+  rename(Result=result)%>%
+  rename(Remark=resultQualifier.notation)%>%
+  select(Date,Remark,Result)%>%
+  group_by(Date,Remark)%>%
+  summarise(Result=mean(Result))%>%
+  arrange(Date) %>% 
+  filter(Date > "2015-01-01")
+
+
+
+
+# GAM for Nitrogen
+
+gam_FN <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = F.TotN.wq.data)
+
+
+future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
+
+#Predict
+future_dates$Predicted_Result <- predict(gam_FN, newdata = future_dates, type = "response")
+
+B <- ggplot(F.TotN.wq.data, aes(x = Date, y = Result)) +
+  geom_point(alpha = 0.2, col = "#0073C2FF") +
+  geom_rug(sides = "l", alpha = 0.2) +  
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="red")+
+  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = "dashed") +
+  labs(title = "GAM Predictions for Total Nitrogen as N",
+       x = "Date",
+       y = "Tot N (mg/L)")
+
+
+
+plot_grid(A, B) #labels = c("OrthoP", "Tot N"))
+```
