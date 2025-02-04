@@ -37,88 +37,9 @@ CDE %<>%
   inner_join(CAT_geo, ., by = c("WB_ID" = "Water.Body.ID"))
 
 
-# We display most recent 2 years after the last classifications. 
-# We display the 3 years before then which aligns with the 2022 interim WFD classification.
-
-WIMS_CAT_22 <- WIMS_CAT %>%  filter(Year >= 2022)             
-WIMS_CAT_20 <- WIMS_CAT %>%  filter(Year >= 2019 & Year < 2022) 
-
-#1 Wims
-WIMS_P <- WIMS_CAT_22 %>% filter(
-  determinand.definition == "Orthophosphate, reactive as P") %>% 
-  group_by(sample.samplingPoint.label) %>% 
-  mutate(Mean_P = round(mean(result),2),
-         Mean_count = n()) %>% 
-  ungroup()
-
-#2 CDE Transforms
-CDE_P <- CDE %>% filter(Classification.Item == "Phosphate" & Year == "2022")
-
-CDE_P_2019 <- CDE %>% filter(Classification.Item == "Phosphate" & Year == "2019")
-
-WIMS_am <- WIMS_CAT_22 %>% filter(
-  determinand.definition== "Ammoniacal Nitrogen as N"
-) %>% 
-  group_by(sample.samplingPoint.label) %>% 
-  mutate(Mean_A = round(mean(result),2),
-         Mean_count = n())
-#CDE Transforms
-CDE_Am<- CDE %>% filter(Classification.Item == "Ammonia (Phys-Chemical)" & Year == "2022")
-
-CDE_Am_2019 <- CDE %>% filter(Classification.Item == "Ammonia (Phys-Chemical)" & Year == "2019")
-
-WIMS_DO <- WIMS_CAT_22 %>% filter(
-  determinand.definition == "Oxygen, Dissolved, % Saturation") %>% 
-  group_by(sample.samplingPoint.label) %>% 
-  mutate(Mean_DO = round(mean(result),2),
-         Mean_count = n()) %>% 
-  ungroup()
-
-CDE_DO <- CDE %>% filter(Classification.Item == "Dissolved oxygen" & Year == "2022")
-CDE_DO_2019 <- CDE %>% filter(Classification.Item == "Dissolved oxygen" & Year == "2019")
-
-WIMS_BOD <- WIMS_CAT_22 %>% filter(
-  determinand.definition == "BOD : 5 Day ATU") %>% 
-  group_by(sample.samplingPoint.label) %>% 
-  mutate(BOD_90th = round(quantile(result, probs = 0.9, na.rm=TRUE),2),
-         Quantile_count = n()) %>% 
-  ungroup()
-
-CDE_BOD <- CDE %>% filter(Classification.Item == "Biochemical Overall Oxygen Demand (BOD)" & Year == "2022")
-CDE_BOD_2019 <- CDE %>% filter(Classification.Item == "Biochemical Overall Oxygen Demand (BOD)" & Year == "2019")
-
-WIMS_NTU <- WIMS_CAT_22 %>% filter(
-  determinand.definition == "Turbidity") %>% 
-  group_by(sample.samplingPoint.label) %>% 
-  mutate(Mean_NTU = round(mean(result),2),
-         Mean_count = n()) %>% 
-  ungroup()
-
-
-Phys_Chem_Site <- readxl::read_excel("/dbfs/FileStore/WSX_HGray/2022_Phys_Chem_Classification_QA_document__RAW_.xlsx", sheet= "Site Class")
-
-# Filter by Wessex area and convert to sf
-Phys_Chem_Site <- Phys_Chem_Site %>% filter(SITE_EA_AREA == "Wessex") %>% 
-  st_as_sf(coords=c("SITE_EASTING","SITE_NORTHING"), crs=27700) %>% 
-  st_transform(4326)
-
-Phys_Chem_Site <- Phys_Chem_Site[CAT,]
-# Phosphate
-Site_P <- Phys_Chem_Site %>% filter(Name == "Phosphate") 
-
-# Ammonia
-Site_Am <- Phys_Chem_Site %>% filter(Name== "Ammonia")
-
-# DO
-Site_DO <- Phys_Chem_Site %>% filter(Name=="DO")
-
-# BOD
-Site_BOD <- Phys_Chem_Site %>% filter(Name=="BOD")
 ```
 
 ```{r}
-
-
 # Get monitoring sites from the Harbour
 
 startDate="2015-01-01"
