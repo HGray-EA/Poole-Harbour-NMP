@@ -13,7 +13,6 @@ format:
     title-block-banner: /dbfs/FileStore/WSX_HGray/S2B_tile_20240719_30UWB_0_B04_B03_B02_S___2_1837043762207036_50_6565565866527__1_9062423706054623_50.jpeg
 ---
 
-
 ```{r quarto setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE, cache=TRUE)
 #| warning: false
@@ -122,13 +121,6 @@ Site_BOD <- Phys_Chem_Site %>% filter(Name=="BOD")
 
 # Get monitoring sites from the Harbour
 
-PH_Sites <- data.frame(Lat= c("50.703328","50.679496","50.7025", "50.701578", "50.678598", "50.711076", "50.712833", "50.710927", "50.719319", "50.713838", "50.701499"),
-                    
-            Long= c("-2.009329","-1.978328", "-1.951654", "-1.941431", "-1.952612", "-1.970779", "-1.992491", "-2.000167", "-2.040128", "-2.025251", "-2.053664"),
-              
-            Site= c("Poole Harbour Three (Hutchins Buoy 71)","Poole Harbour Twelve (South Deep)", "POOLE HARBOUR SIX NORTH CHANNEL NEAR BUOY NO. 36", "Poole Harbour East Dorset Sailing Club", "	POOLE HARBOUR SOUTH HAVEN POINT", "POOLE HARBOUR BAITER PARK", "POOLE HARBOUR FOUR POOLE BRIDGE", "POOLE HARBOUR HAMWORTHY PARK", "POOLE HARBOUR ROCKLEY SANDS (19450)", "POOLE HARBOUR AT LAKE (19400)","POOLE HARBOUR 1 WAREHAM CHANNEL BUOY 82"))
-
-
 startDate="2015-01-01"
 endDate="2025-02-03"
 
@@ -136,7 +128,7 @@ param.units="mg/l"
 
 det="9943" #	Nitrogen, Total Oxidised as N
 #read water quality data from online WQ archive
-wd<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?area=6-28&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=999999"),stringsAsFactors=FALSE)
+wd<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?area=6-28&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)
 
 TraC.dat <- wd %>% mutate(
                easting = as.numeric(sample.samplingPoint.easting),
@@ -247,8 +239,6 @@ leaflet() %>%
   hideGroup("Waterbodies")
 
 ###########################################################################################################################################################
-
-
 ```
 
 ```{r TraC Map}
@@ -324,7 +314,6 @@ leaflet() %>%
   hideGroup("Waterbodies")
 ```
 
-
 ```{r, Overview of monitoring histograms}
 
 
@@ -364,24 +353,17 @@ plotly::ggplotly(v)  %>%
 
 ```
 
+## Source Apportionment (SAGIS) Modelling Outputs
 
-### Timeseries trends
+The below maps show SAGIS modelling outputs, SAGIS has been jointly developed with UKWIR (the UK Water Industry Research group) since 2010 and is the main water quality catchment modelling tools that are used by environmental regulators in the UK including the EA. Modelling Phosphate data.
 
-```{r}
-Sites = c("RIVER PIDDLE AT WEST MILLS", "CORFE RIVER D/S CORFE STW", "SHERFORD RIVER AT KING BRIDGE", "WAREHAM FOREST STREAM AT SANDFORD ROAD", " NORTHPORT @ NORTHMOOR PARK", "RIVER FROME AT HOLME BRIDGE")
+The below map shows a baseline for phosphate up until 2024, whilst the map below this shows forecast improvements for 2030.
+[![SAGIS Baseline 2024 Outputs]("/dbfs/FileStore/WSX_HGray/SAGIS_Baseline_2024.png")](https://eaimportalpoc.esriuk.com/portal/apps/webappviewer/index.html?id=ba893996b8424dda9020194e1d9bebde  Timeseries trends)
 
-W_Sites <- WIMS_CAT %>% filter(sample.samplingPoint.label %in% Sites) %>% 
-            mutate(month = lubridate::month(date_time))
+The below map 
+![SAGIS Amp9 2024 Outputs]("/dbfs/FileStore/WSX_HGray/SAGIS_Amp9_2024.png")
 
-W_Sites_Winter <- W_Sites %>%  filter(month <= "06" & month >= "09")
-
-ggplot(W_Sites, aes(date_time, result), col= result)+geom_point()+facet_wrap(~sample.samplingPoint.label, ncol=3)
-
-```
-
-
-A Generalised Additive Model was 
-Water Quality River Frome
+'Interim N loading targets for Poole Harbour ®: - Total N loads entering the harbour from non-marine sources should be reduced to 1500 tonnes/N/yr. - Point source loads from WWTW should not exceed 209 tonnes N/yr. - All agricultural N loads should be reduced to c1127 tonnes N/yr. - Other N loads should be delivered as detailed in Table 7.1:1'
 
 ```{r, River Frome Water Quality Plots}
 library(MetBrewer)
