@@ -1,5 +1,5 @@
 ---
-title: "Poole Harbour Nutrient Management Plan"
+title: "Poole Harbour Nutrient Monitoring Report"
 format:
   html:
     theme: flatly
@@ -10,6 +10,7 @@ format:
     code-fold: false
     code-tools: false
     fig-cap: true
+    title-block-banner: /dbfs/FileStore/WSX_HGray/S2B_tile_20240719_30UWB_0_B04_B03_B02_S___2_1837043762207036_50_6565565866527__1_9062423706054623_50.jpeg
 ---
 
 
@@ -19,8 +20,9 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE, cache=TRUE)
 #| echo: false
 ```
 
+### Monitoring Sites Map
 
-```{r, Overview of monitoring histograms}
+```{r, monitoring sites map}
 # Monitoring in Poole Harbour
 library(sf)
 
@@ -113,21 +115,234 @@ Site_DO <- Phys_Chem_Site %>% filter(Name=="DO")
 
 # BOD
 Site_BOD <- Phys_Chem_Site %>% filter(Name=="BOD")
+```
 
+```{r}
+
+
+# Get monitoring sites from the Harbour
+
+PH_Sites <- data.frame(Lat= c("50.703328","50.679496","50.7025", "50.701578", "50.678598", "50.711076", "50.712833", "50.710927", "50.719319", "50.713838", "50.701499"),
+                    
+            Long= c("-2.009329","-1.978328", "-1.951654", "-1.941431", "-1.952612", "-1.970779", "-1.992491", "-2.000167", "-2.040128", "-2.025251", "-2.053664"),
+              
+            Site= c("Poole Harbour Three (Hutchins Buoy 71)","Poole Harbour Twelve (South Deep)", "POOLE HARBOUR SIX NORTH CHANNEL NEAR BUOY NO. 36", "Poole Harbour East Dorset Sailing Club", "	POOLE HARBOUR SOUTH HAVEN POINT", "POOLE HARBOUR BAITER PARK", "POOLE HARBOUR FOUR POOLE BRIDGE", "POOLE HARBOUR HAMWORTHY PARK", "POOLE HARBOUR ROCKLEY SANDS (19450)", "POOLE HARBOUR AT LAKE (19400)","POOLE HARBOUR 1 WAREHAM CHANNEL BUOY 82"))
+
+
+startDate="2015-01-01"
+endDate="2025-02-03"
+
+param.units="mg/l"
+
+det="9943" #	Nitrogen, Total Oxidised as N
+#read water quality data from online WQ archive
+wd<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?area=6-28&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=999999"),stringsAsFactors=FALSE)
+
+TraC.dat <- wd %>% mutate(
+               easting = as.numeric(sample.samplingPoint.easting),
+               northing = as.numeric(sample.samplingPoint.northing),
+              Date = as.Date(sample.sampleDateTime)
+                ) %>% 
+              st_as_sf(coords= c("easting","northing"), crs=27700) %>% 
+              st_transform(4326) %>% 
+             filter(Date > "2020-01-01") %>% 
+             group_by(sample.samplingPoint.notation) %>% 
+             mutate(
+              Mean_N = round(mean(result),2),
+              Mean_Count = n()
+              ) %>% 
+             ungroup()
+
+det = "0116" # 	Nitrogen, Total Oxidised as N
+wd.land<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?area=6-28&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=999999"),stringsAsFactors=FALSE)
+
+Riv.dat<-wd.land %>% mutate(
+               easting = as.numeric(sample.samplingPoint.easting),
+               northing = as.numeric(sample.samplingPoint.northing),
+               Date = as.Date(sample.sampleDateTime)
+                ) %>% 
+              st_as_sf(coords= c("easting","northing"), crs=27700) %>% 
+              st_transform(4326) %>% 
+             filter(Date > "2020-01-01") %>% 
+             group_by(sample.samplingPoint.notation) %>% 
+             mutate(
+              Mean_N = round(mean(result),2),
+              Mean_Count = n()
+              ) %>% 
+             ungroup()
+
+Riv.dat <- Riv.dat[CAT,]
+
+
+# We now have a dataset for hourly spills within 2022 which is linked to locations. 
+library(leaflet.extras)
+
+# Define log-scaled bins for numeric data
+binz <-c(0,0.2,0.5,1,5,10,15,Inf)
+
+# Create a color palette using colorBin for numeric data
+pal_p <- colorBin(palette = "inferno", domain = WIMS_am$result, bins = binz, reverse=TRUE )
+
+
+leaflet() %>%
+  addProviderTiles(providers$Esri, group = "Esri Basemap") %>%
+  addPolygons(
+    data = CAT_Union,
+    fillOpacity = 0.0001,
+    fillColor = NA,
+    color = "black",
+    weight = 3,
+    options = pathOptions(zIndex = 600)
+  ) %>%
+  addPolygons(
+    data = CAT,
+    fillOpacity = 0.0001,
+    fillColor = NA,
+    color = "black",
+    weight = 3,
+    highlightOptions = highlightOptions(
+      color = "white",
+      weight = 4,
+      bringToFront = FALSE
+    ),
+    options = pathOptions(zIndex = 600),
+    group = "Waterbodies"
+  ) %>%
+  addPolylines(
+    data = DRN,
+    col = "#2832C2",
+    weight = 1,
+    opacity = 0.5,
+    options = pathOptions(zIndex = 600)
+  ) %>%
+  addCircleMarkers(
+    data = Riv.dat,
+    radius = 10,
+    color = "black",
+    weight = 1,
+    fillColor = ~pal_p(Mean_N),
+    fillOpacity = 1,
+    popup = ~paste0(
+      "Site: ", Riv.dat$sample.samplingPoint.label, "<br> Mean N (mg/L): ", Riv.dat$Mean_N, 
+      "<br> Sample Count: ", Riv.dat$Mean_Count,
+      "<br> from/to: ", min(Riv.dat$Date), " / ", max(Riv.dat$Date)
+    ),
+    options = pathOptions(zIndex = 999),
+    group = "PO4-P"
+  ) %>%
+    addLegend(
+    "bottomleft",
+    pal = pal_p,
+    values = binz,
+    title = "Mean N 2022-2025",
+    group = "PO4-P"
+  ) %>%
+  addScaleBar() %>%
+  addLayersControl(
+    overlayGroups = c("Waterbodies"),
+    position = "topright",
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  htmlwidgets::onRender(Layers_JS) %>%
+  hideGroup("Waterbodies")
+
+###########################################################################################################################################################
+
+
+```
+
+```{r TraC Map}
+
+# Define log-scaled bins for numeric data
+bins <-c(0,0.02,0.05,0.1,0.5,1,2,Inf)
+
+# Create a color palette using colorBin for numeric data
+pal_p <- colorBin(palette = "magma", domain = WIMS_am$result, bins = bins, reverse=TRUE )
+
+
+leaflet() %>%
+  setView("-2.0063083662813836","50.68760858102863",  zoom =12) %>% 
+  addProviderTiles(providers$Esri, group = "Esri Basemap") %>%
+  addPolygons(
+    data = CAT_Union,
+    fillOpacity = 0.0001,
+    fillColor = NA,
+    color = "black",
+    weight = 3,
+    options = pathOptions(zIndex = 600)
+  ) %>%
+  addPolygons(
+    data = CAT,
+    fillOpacity = 0.0001,
+    fillColor = NA,
+    color = "black",
+    weight = 3,
+    highlightOptions = highlightOptions(
+      color = "white",
+      weight = 4,
+      bringToFront = FALSE
+    ),
+    options = pathOptions(zIndex = 600),
+    group = "Waterbodies"
+  ) %>%
+  addPolylines(
+    data = DRN,
+    col = "#2832C2",
+    weight = 1,
+    opacity = 0.5,
+    options = pathOptions(zIndex = 600)
+  ) %>%
+  addCircleMarkers(
+    data= TraC.dat,
+    radius = 10,
+    color = "black",
+    weight = 1,
+    fillColor = ~pal_p(Mean_N),
+    fillOpacity = 1,
+     popup = ~paste0(
+      "Site: ", TraC.dat$sample.samplingPoint.label, "<br> Mean N (mg/L): ", TraC.dat$Mean_N, 
+      "<br> Sample Count: ", TraC.dat$Mean_Count,
+      "<br> from/to: ", min(TraC.dat$Date), " / ", max(TraC.dat$Date)
+    ),
+    options = pathOptions(zIndex = 999),
+    group = "PO4-P"
+  ) %>%
+  addLegend(
+    "bottomleft",
+    pal = pal_p,
+    values = binz,
+    title = "Mean N Tot 2022-2025",
+    group = "PO4-P"
+  ) %>%
+  addScaleBar() %>%
+  addLayersControl(
+    overlayGroups = c("Waterbodies"),
+    position = "topright",
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  htmlwidgets::onRender(Layers_JS) %>%
+  hideGroup("Waterbodies")
+```
+
+
+```{r, Overview of monitoring histograms}
+
+
+TraC.dat = TraC.dat[CAT,]
 ### 
 
 # Violin plot
-v <- ggplot(WIMS_P, aes(x = WB_NAME, y = result)) +
-  # geom_violin(aes(fill = WB_NAME), color = "black", alpha = 0.5) +  # Violin plot with some transparency
-  geom_boxplot(width = 0.05, color = "black", aes(fill = WB_NAME), alpha = 0.7) +  # Boxplot on top
-  geom_text(aes(x = WB_NAME, y = -Inf, label = paste("Count: ", Mean_count)), vjust = -0.5, hjust = 0.5, size = 4) +  # Add counts below the x-axis if available
-  labs(title = "2022-2025 Phosphate Distribution by WB", x = "Waterbody", y = "Phosphate (mg/L)") +
+v <- ggplot(TraC.dat, aes(x = sample.samplingPoint.label, y = result)) +
+  # geom_violin(aes(fill = sample.samplingPoint.label), color = "black", alpha = 0.5) +  # Violin plot with some transparency
+  geom_boxplot(width = 0.05, color = "black", aes(fill = sample.samplingPoint.label), alpha = 0.7) +  # Boxplot on top
+  geom_text(aes(x = sample.samplingPoint.label, y = -Inf, label = paste("Count: ", Mean_Count)), vjust = -0.5, hjust = 0.5, size = 4) +  # Add counts below the x-axis if available
+  labs(title = "2020-2025 Total N Distribution by Site", x = "Site", y = "Total Nitrogen as N (mg/L)") +
   #scale_y_continuous(limits = c(0,20), breaks = c(0,0.1,0.2,0.3,0.5,1)) + 
-  geom_hline(yintercept = 0.3, col = "red")+ # this is wfd poor
-  geom_hline(yintercept = 0.1, col = "green")+# this is wfd good
+#  geom_hline(yintercept = 0.3, col = "red")+ # this is wfd poor
+#  geom_hline(yintercept = 0.1, col = "green")+# this is wfd good
   theme_minimal() +  # Use a minimal theme for a cleaner look
   theme(legend.position = "none", axis.text.x = element_text(angle=45, size=9)) +
-  labs(caption = "WFD Phosphate Reactive P, good and poor indicated by horizontal lines")+
+  labs(caption = "Total Nitrogen as N")+
   coord_flip()
 
 #a <- ggplot(WIMS_p, aes(x= WB_NAME, y=result, col=result))+
@@ -139,7 +354,7 @@ plotly::ggplotly(v)  %>%
     annotations = list(
       x = 0.5,  # Horizontal center
       y = -5,  # Position below the plot
-      text = "WFD Phosphate Reactive P, good and poor indicated by horizontal lines",
+      text = "Total Nitrogen as N",
       showarrow = FALSE,
       xref = "paper",
       yref = "paper",
@@ -149,72 +364,6 @@ plotly::ggplotly(v)  %>%
 
 ```
 
-### Monitoring Sites Map
-
-```{r, monitoring sites map}
-
-# We now have a dataset for hourly spills within 2022 which is linked to locations. 
-library(leaflet.extras)
-
-# Define log-scaled bins for numeric data
-binz <-c(0,0.05,0.1,0.2,0.5,1,2,5,10,Inf)
-
-# Create a color palette using colorBin for numeric data
-pal_p <- colorBin(palette = "inferno", domain = WIMS_P$result, bins = binz, reverse=TRUE )
-
-
-leaflet() %>%
-  addProviderTiles(providers$Esri, group="Esri Basemap") %>% 
-  addPolygons(data=CAT_Union,
-              fillOpacity = 0.0001,
-              fillColor = NA,
-              color = "black",
-              weight = 3,
-              options = pathOptions(zIndex = 600)
-  ) %>% 
-  addPolygons(data=CAT,
-              fillOpacity = 0.0001,
-              fillColor = NA,
-              color = "black",
-              weight = 3,
-              highlightOptions = highlightOptions(color = "white", weight = 4,
-                                                  bringToFront = FALSE),
-              options = pathOptions(zIndex = 600),
-              group = "Waterbodies"
-  ) %>% 
-  
-  addPolylines(data=DRN, col="#2832C2", weight=1, 
-               opacity = 0.5,
-               options = pathOptions(zIndex = 600)
-  ) %>%
-  addCircleMarkers(
-    data=WIMS_P,
-    radius = 10,
-    color = "black",
-    weight = 1,
-    fillColor = ~pal_p(Mean_P),
-    fillOpacity = 1,
-    popup = ~paste0("Site: ", WIMS_P$sample.samplingPoint.label, "<br> Mean PO4-P (mg/L): ", WIMS_P$Mean_P, "<br> Sample Count: ", WIMS_P$Mean_count,
-                    "<br> from/to: ",
-                    min(WIMS_P$Date), "/", max(WIMS_P$Date)),
-    options = pathOptions(zIndex = 999),
-    group = "PO4-P" ) %>% 
-  addLegend("bottomleft", 
-            pal = pal_p, 
-            values = binz, 
-            title = "Mean PO4-P 2022-2025",
-            group = "PO4-P") %>% 
-  addScaleBar()  %>% 
-  addLayersControl(overlayGroups = c(
-    
-    "Waterbodies"
-  ),
-  position="topright",
-  options= layersControlOptions(collapsed=FALSE)) %>% 
-  htmlwidgets::onRender(Layers_JS) %>% 
-  hideGroup(c( 
-    "Waterbodies"))
-```
 
 ### Timeseries trends
 
@@ -273,7 +422,7 @@ A <- ggplot(F.O.wq.data, aes(x = Date, y = Result)) +
   geom_rug(sides = "l", alpha = 0.2) +  
   stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="red")+
   geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = "dashed") +
-  labs(title = "GAM Prediction for Orthophosphate",
+  labs(title = "Orthophosphate",
        x = "Date",
        y = "Orthophosphate (mg/L)")
 
@@ -308,13 +457,13 @@ B <- ggplot(F.TotN.wq.data, aes(x = Date, y = Result)) +
   geom_rug(sides = "l", alpha = 0.2) +  
   stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="red")+
   geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = "dashed") +
-  labs(title = "GAM Predictions for Total Nitrogen as N",
+  labs(title = "Total Nitrogen Oxidised as N",
        x = "Date",
        y = "Tot N (mg/L)")
 
 
 
-plot_grid(A, B) #labels = c("OrthoP", "Tot N"))
+plot_grid(A, B, title= "River Frome at Holme Bridge") #labels = c("OrthoP", "Tot N"))
 ```
 
 ```{r Piddle}
