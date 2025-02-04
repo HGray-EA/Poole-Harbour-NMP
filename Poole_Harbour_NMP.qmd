@@ -33,7 +33,7 @@ source("Catch_Set_Up.R")
 CDE <- read.csv("/dbfs/mnt/lab/unrestricted/harry.gray@environment-agency.gov.uk/CEP/WFD_Wessex_2024.csv")
 
 CDE %<>% 
-  filter(Operational.Catchment == unique(CAT$OPCAT_NAME)) %>% 
+  filter(Operational.Catchment == unique(CAT$OPCAT_NAME)[1]) %>% 
   inner_join(CAT_geo, ., by = c("WB_ID" = "Water.Body.ID"))
 
 
@@ -86,8 +86,6 @@ Riv.dat<-wd.land %>% mutate(
 
 Riv.dat <- Riv.dat[CAT,]
 
-
-# We now have a dataset for hourly spills within 2022 which is linked to locations. 
 library(leaflet.extras)
 
 # Define log-scaled bins for numeric data
@@ -159,7 +157,6 @@ leaflet() %>%
   htmlwidgets::onRender(Layers_JS) %>%
   hideGroup("Waterbodies")
 
-###########################################################################################################################################################
 ```
 
 ```{r TraC Map}
@@ -169,7 +166,6 @@ bins <-c(0,0.02,0.05,0.1,0.5,1,2,Inf)
 
 # Create a color palette using colorBin for numeric data
 pal_p <- colorBin(palette = "magma", domain = WIMS_am$result, bins = bins, reverse=TRUE )
-
 
 leaflet() %>%
   setView("-2.0063083662813836","50.68760858102863",  zoom =12) %>% 
@@ -237,7 +233,6 @@ leaflet() %>%
 
 ```{r, Overview of monitoring histograms}
 
-
 TraC.dat = TraC.dat[CAT,]
 ### 
 
@@ -285,6 +280,7 @@ The below map
 ![SAGIS Amp9 2024 Outputs]("/dbfs/FileStore/WSX_HGray/SAGIS_Amp9_2024.png")
 
 'Interim N loading targets for Poole Harbour ®: - Total N loads entering the harbour from non-marine sources should be reduced to 1500 tonnes/N/yr. - Point source loads from WWTW should not exceed 209 tonnes N/yr. - All agricultural N loads should be reduced to c1127 tonnes N/yr. - Other N loads should be delivered as detailed in Table 7.1:1'
+
 
 ```{r, River Frome Water Quality Plots}
 library(MetBrewer)
@@ -369,6 +365,12 @@ B <- ggplot(F.TotN.wq.data, aes(x = Date, y = Result)) +
 plot_grid(A, B, title= "River Frome at Holme Bridge") #labels = c("OrthoP", "Tot N"))
 ```
 
+![](/dbfs/FileStore/WSX_HGray/Piddle_Tot_N_timeseries.png)!\[Piddle N Total Timeseries\]\]("/dbfs/FileStore/WSX_HGray/Piddle_Tot_N\_timeseries.png")
+
+![](/dbfs/FileStore/WSX_HGray/Piddle_N_Tot_mean_normalised_conc.png)
+
+![](/dbfs/FileStore/WSX_HGray/Piddle_total_p_conc_over_time.png)
+
 ```{r Piddle}
 wqsite<-"SW-50450129"
 
@@ -448,7 +450,7 @@ plot_grid(A, B) #labels = c("OrthoP", "Tot N"))
 
 ```
 
-```{r}
+```{r Sherford}
 wqsite<-"SW-50951010"
 
 startDate="2000-01-01"
@@ -492,11 +494,12 @@ Sher_OP <- ggplot(Sher.O.wq.data, aes(Date, Result)) +
        x = "Date", y = "Result (mg/l)") +
   theme_bw()
 
+
 Sher_N <- ggplot(Sher.N.wq.data, aes(Date, Result)) +
   geom_point(aes(color = Result)) +
   scale_x_date(limits = as.Date(c("2000-01-01", "2025-02-03"))) +
  scale_y_continuous(limits = c(2.5, 10)) +
-  scale_color_gradientn(colors = met.brewer("Derain", direction = -1)) +
+  scale_color_gradient2(colors = met.brewer("Derain", direction = -1)) +
   geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), colour = "red") +
   labs(title = "Total N Oxidised, Sherford River At King Bridge",
        x = "Date", y = "Result (mg/l)") +
