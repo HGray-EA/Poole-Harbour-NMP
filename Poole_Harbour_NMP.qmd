@@ -3,6 +3,8 @@ title: "Poole Harbour Nutrient Monitoring Report"
 format:
   html:
     theme: flatly
+    date: 02-05-2025
+    author: Environment Agency, H. Gray
     toc: true
     toc-location: right
     toc-depth: 3
@@ -110,6 +112,7 @@ pal_p <- colorBin(palette = "inferno", domain = Riv.dat$result, bins = binz, rev
 
 leaflet() %>%
   addProviderTiles(providers$Esri, group = "Esri Basemap") %>%
+  setView("-2.0063083662813836","50.68760858102863",  zoom =10) %>% 
   addPolygons(
     data = CAT_Union,
     fillOpacity = 0.0001,
@@ -309,7 +312,7 @@ plotly::ggplotly(v2)  %>%
 
 ### Freshwater Nitrogen & Phosphate Trends
 
-Nutrients are mapped for the four main feeder rivers to the Harbour: the Frome, Piddle, Sherford and Corfe. The river Frome has the largest discharge and drains an area approximatley 3 times that of the Piddle.
+Nutrients are mapped for the four main feeder rivers to the Harbour: the Frome, Piddle, Sherford and Corfe (ordered by daily discharge). The river Frome has the largest discharge and drains an area approximatley 3 times that of the Piddle.
 
 #### River Frome
 
@@ -686,5 +689,5 @@ PH3_N <- ggplot(PH3.N.wq.data, aes(Date, Result)) +
        x = "Date", y = "Result (mg/l)") +
   theme_bw()
 
-plot_grid(PH3_OP, PH3_N)
+#plot_grid(PH3_OP, PH3_N)
 ```
