@@ -10,7 +10,7 @@ format:
     code-fold: false
     code-tools: false
     fig-cap: true
-    title-block-banner: /dbfs/FileStore/WSX_HGray/S2B_tile_20240719_30UWB_0_B04_B03_B02_S___2_1837043762207036_50_6565565866527__1_9062423706054623_50.jpeg
+    title-block-banner: true
 ---
 
 ```{r quarto setup, include=FALSE}
@@ -18,6 +18,12 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE, cache=TRUE)
 #| warning: false
 #| echo: false
 ```
+
+### Introduction
+
+The Environment Agency monitor at 5 locations in Poole Harbour, monitoring is undertaken at five sites (currently under the National Surveillance program) as well as in Poole Harbour Rivers catchment (see below for monitoring sites). Monitoring at Poole Harbour 4 (Poole Bridge) by Poole Harbour Old Town has been dropped by national monitoring programme at the EA from this year but Wessex area team have requested that nutrient monitoring is continued at this site under a local driver.
+
+With regard to macroalgae, we carry out opportunistic macroalgae surveys every three years (next due in 2026). 
 
 ### Monitoring Sites Map
 
@@ -38,6 +44,8 @@ CDE %<>%
 
 
 ```
+
+------------------------------------------------------------------------------
 
 ```{r}
 # Get monitoring sites from the Harbour
@@ -92,7 +100,7 @@ library(leaflet.extras)
 binz <-c(0,0.2,0.5,1,5,10,15,Inf)
 
 # Create a color palette using colorBin for numeric data
-pal_p <- colorBin(palette = "inferno", domain = WIMS_am$result, bins = binz, reverse=TRUE )
+pal_p <- colorBin(palette = "inferno", domain = Riv.dat$result, bins = binz, reverse=TRUE )
 
 
 leaflet() %>%
@@ -145,7 +153,7 @@ leaflet() %>%
     "bottomleft",
     pal = pal_p,
     values = binz,
-    title = "Mean N 2022-2025",
+    title = "Mean N 2015-2025",
     group = "PO4-P"
   ) %>%
   addScaleBar() %>%
@@ -159,13 +167,15 @@ leaflet() %>%
 
 ```
 
+-----------------------------------------------------------------------------
+
 ```{r TraC Map}
 
 # Define log-scaled bins for numeric data
 bins <-c(0,0.02,0.05,0.1,0.5,1,2,Inf)
 
 # Create a color palette using colorBin for numeric data
-pal_p <- colorBin(palette = "magma", domain = WIMS_am$result, bins = bins, reverse=TRUE )
+pal_p <- colorBin(palette = "magma", domain = TraC.dat$result, bins = bins, reverse=TRUE )
 
 leaflet() %>%
   setView("-2.0063083662813836","50.68760858102863",  zoom =12) %>% 
@@ -218,7 +228,7 @@ leaflet() %>%
     "bottomleft",
     pal = pal_p,
     values = binz,
-    title = "Mean N Tot 2022-2025",
+    title = "Mean N Tot 2015-2025",
     group = "PO4-P"
   ) %>%
   addScaleBar() %>%
@@ -236,8 +246,26 @@ leaflet() %>%
 TraC.dat = TraC.dat[CAT,]
 ### 
 
+#Trac.dat_20_22 <- TraC.dat %>% filter(Date <2020-01-01)
+
+
+Trac.dat_22_25 <- TraC.dat %>% filter(Date >2022-01-01)
+
 # Violin plot
-v <- ggplot(TraC.dat, aes(x = sample.samplingPoint.label, y = result)) +
+   #         v1 <- ggplot(Trac.dat_20_22 , aes(x = sample.samplingPoint.label, y #= result)) +
+#              # geom_violin(aes(fill = sample.samplingPoint.label), color = #"black", alpha = 0.5) +  # Violin plot with some transparency
+#              geom_boxplot(width = 0.05, color = "black", aes(fill = #sample.samplingPoint.label), alpha = 0.7) +  # Boxplot on top
+#              geom_text(aes(x = sample.samplingPoint.label, y = -Inf, label = #paste("Count: ", Mean_Count)), vjust = -0.5, hjust = 0.5, size = 4) +  # Add #counts below the x-axis if available
+#              labs(title = "2020-2025 Total N Distribution by Site", x = #"Site", y = "Total Nitrogen as N (mg/L)") +
+#              #scale_y_continuous(limits = c(0,20), breaks = #c(0,0.1,0.2,0.3,0.5,1)) + 
+#            #  geom_hline(yintercept = 0.3, col = "red")+ # this is wfd poor
+#            #  geom_hline(yintercept = 0.1, col = "green")+# this is wfd good
+#              theme_minimal() +  # Use a minimal theme for a cleaner look
+#              theme(legend.position = "none", axis.text.x = #element_text(angle=45, size=9)) +
+#              labs(caption = "Total Nitrogen as N 2015-2020")+
+#              coord_flip()
+#
+v2 <- ggplot(Trac.dat_22_25, aes(x = sample.samplingPoint.label, y = result)) +
   # geom_violin(aes(fill = sample.samplingPoint.label), color = "black", alpha = 0.5) +  # Violin plot with some transparency
   geom_boxplot(width = 0.05, color = "black", aes(fill = sample.samplingPoint.label), alpha = 0.7) +  # Boxplot on top
   geom_text(aes(x = sample.samplingPoint.label, y = -Inf, label = paste("Count: ", Mean_Count)), vjust = -0.5, hjust = 0.5, size = 4) +  # Add counts below the x-axis if available
@@ -247,19 +275,20 @@ v <- ggplot(TraC.dat, aes(x = sample.samplingPoint.label, y = result)) +
 #  geom_hline(yintercept = 0.1, col = "green")+# this is wfd good
   theme_minimal() +  # Use a minimal theme for a cleaner look
   theme(legend.position = "none", axis.text.x = element_text(angle=45, size=9)) +
-  labs(caption = "Total Nitrogen as N")+
+  labs(caption = "Total Nitrogen as N 2020-2025")+
   coord_flip()
 
 #a <- ggplot(WIMS_p, aes(x= WB_NAME, y=result, col=result))+
 #  geom_point()+theme(axis.text.x = element_text(angle=90, size=5))+labs(y= "Orthophosphate (mg/L)", x= "Waterbodies")
 
-# Add the caption manually using layout
-plotly::ggplotly(v)  %>%
+
+
+plotly::ggplotly(v2)  %>%
   plotly::layout(
     annotations = list(
       x = 0.5,  # Horizontal center
       y = -5,  # Position below the plot
-      text = "Total Nitrogen as N",
+      text = "Total Nitrogen as N 2022-2025",
       showarrow = FALSE,
       xref = "paper",
       yref = "paper",
@@ -274,22 +303,30 @@ plotly::ggplotly(v)  %>%
 The below maps show SAGIS modelling outputs, SAGIS has been jointly developed with UKWIR (the UK Water Industry Research group) since 2010 and is the main water quality catchment modelling tools that are used by environmental regulators in the UK including the EA. Modelling Phosphate data.
 
 The below map shows a baseline for phosphate up until 2024, whilst the map below this shows forecast improvements for 2030.
-[![SAGIS Baseline 2024 Outputs]("/dbfs/FileStore/WSX_HGray/SAGIS_Baseline_2024.png")](https://eaimportalpoc.esriuk.com/portal/apps/webappviewer/index.html?id=ba893996b8424dda9020194e1d9bebde  Timeseries trends)
 
-The below map 
-![SAGIS Amp9 2024 Outputs]("/dbfs/FileStore/WSX_HGray/SAGIS_Amp9_2024.png")
+[![SAGIS Baseline 2024 Outputs](/dbfs/FileStore/WSX_HGray/SAGIS_Baseline_2024.png)](https://eaimportalpoc.esriuk.com/portal/apps/webappviewer/index.html?id=ba893996b8424dda9020194e1d9bebde%20Timeseries%20trends)
+
+![SAGIS Amp9 2024 Outputs](/dbfs/FileStore/WSX_HGray/SAGIS_Amp9_2024.png)
+
+### Feshwater Nitrogen & Phosphate Trends
+
+Below the nutrients are mapped for the four main feeder rivers to the Harbour, the river Frome exports the most drains an area \~3 times that of the Piddle In the Frome at Holme Bridge we see a decrease in Orthophosphate since 2000 whilst Nitrogen Total flat lines.
 
 'Interim N loading targets for Poole Harbour ®: - Total N loads entering the harbour from non-marine sources should be reduced to 1500 tonnes/N/yr. - Point source loads from WWTW should not exceed 209 tonnes N/yr. - All agricultural N loads should be reduced to c1127 tonnes N/yr. - Other N loads should be delivered as detailed in Table 7.1:1'
 
+![](/dbfs/FileStore/WSX_HGray/Piddle_Tot_N_timeseries.png) ![](/dbfs/FileStore/WSX_HGray/Piddle_N_Tot_mean_normalised_conc.png)
 
-```{r, River Frome Water Quality Plots}
+![](/dbfs/FileStore/WSX_HGray/Piddle_total_p_conc_over_time.png)
+
+```{r Frome}
+
 library(MetBrewer)
 library(mgcv) 
 library(cowplot)
 
-wqsite<-"SW-50590127"#River Frome at Holme Bridge
+wqsite<-"SW-50590127"
 
-startDate="2000-01-01"
+startDate="2015-01-01"
 endDate="2025-02-03"
 
 param.units="mg/l"
@@ -297,7 +334,7 @@ param.units="mg/l"
 det="0118"#OrthoP #0116
 
 #read water quality data from online WQ archive
-F.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+FR.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
   mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
   mutate(Date=date(date.time))%>%
   rename(Result=result)%>%
@@ -305,31 +342,30 @@ F.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data
   select(Date,Remark,Result)%>%
   group_by(Date,Remark)%>%
   summarise(Result=mean(Result))%>%
-  arrange(Date) %>% 
-  filter(Date > "2015-01-01")
+  arrange(Date) 
 
-  gam_FO <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = F.O.wq.data)
-  
-    future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
-  
+#  gam_PO <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = FR.O.wq.data)
+
   #Predict
-      future_dates$Predicted_Result <- predict(gam_FO, newdata = future_dates, type = "response")
+ #     future_dates$Predicted_Result <- predict(gam_PO, newdata = future_dates, type = "response")
   
 
-A <- ggplot(F.O.wq.data, aes(x = Date, y = Result)) +
+FA <- ggplot(FR.O.wq.data, aes(x = Date, y = Result)) +
   geom_point(alpha = 0.2, col = "#c24f00") +
   geom_rug(sides = "l", alpha = 0.2) +  
-  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="red")+
-  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = "dashed") +
-  labs(title = "Orthophosphate",
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
+ # ylim(c(0,0.06))+
+#  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
+  labs(title = "Frome, Orthophosphate",
        x = "Date",
-       y = "Orthophosphate (mg/L)")
+       y = "Orthophosphate (mg/L)")+
+  theme_bw()
 
 
 det="0116"#OrthoP #0116
 
 #read water quality data from online WQ archive
-F.TotN.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+FR.TotN.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
   mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
   mutate(Date=date(date.time))%>%
   rename(Result=result)%>%
@@ -337,44 +373,39 @@ F.TotN.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/d
   select(Date,Remark,Result)%>%
   group_by(Date,Remark)%>%
   summarise(Result=mean(Result))%>%
-  arrange(Date) %>% 
-  filter(Date > "2015-01-01")
-
+  arrange(Date) 
 
 # GAM for Nitrogen
 
-gam_FN <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = F.TotN.wq.data)
+#gam_FN <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = FR.TotN.wq.data)
 
 
-future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
+#future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
 
 #Predict
-future_dates$Predicted_Result <- predict(gam_FN, newdata = future_dates, type = "response")
+#future_dates$Predicted_Result <- predict(gam_FN, newdata = future_dates, type = "response")
 
-B <- ggplot(F.TotN.wq.data, aes(x = Date, y = Result)) +
+FB <- ggplot(FR.TotN.wq.data, aes(x = Date, y = Result)) +
   geom_point(alpha = 0.2, col = "#0073C2FF") +
   geom_rug(sides = "l", alpha = 0.2) +  
-  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="red")+
-  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = "dashed") +
-  labs(title = "Total Nitrogen Oxidised as N",
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
+  ylim(c(0,8))+
+ # geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
+  labs(title = "Frome, Total Nitrogen as N",
        x = "Date",
-       y = "Tot N (mg/L)")
+       y = "Tot N (mg/L)")+
+  theme_bw()
 
+plot_grid(FA,FB)
 
-
-plot_grid(A, B, title= "River Frome at Holme Bridge") #labels = c("OrthoP", "Tot N"))
 ```
 
-![](/dbfs/FileStore/WSX_HGray/Piddle_Tot_N_timeseries.png)!\[Piddle N Total Timeseries\]\]("/dbfs/FileStore/WSX_HGray/Piddle_Tot_N\_timeseries.png")
-
-![](/dbfs/FileStore/WSX_HGray/Piddle_N_Tot_mean_normalised_conc.png)
-
-![](/dbfs/FileStore/WSX_HGray/Piddle_total_p_conc_over_time.png)
+In the Piddle we see the same story since 2000 as the Frome, although Orthophosphate has only since the last 5 years met the levels of reduced Orthophosphate as the Frome.
 
 ```{r Piddle}
 wqsite<-"SW-50450129"
 
-startDate="2000-01-01"
+startDate="2015-01-01"
 endDate="2025-02-03"
 
 param.units="mg/l"
@@ -391,23 +422,24 @@ P.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data
   select(Date,Remark,Result)%>%
   group_by(Date,Remark)%>%
   summarise(Result=mean(Result))%>%
-  arrange(Date) %>% 
-  filter(Date > "2015-01-01")
+  arrange(Date) 
 
-  gam_PO <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = P.O.wq.data)
+#  gam_PO <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = P.O.wq.data)
 
   #Predict
-      future_dates$Predicted_Result <- predict(gam_FO, newdata = future_dates, type = "response")
+ #     future_dates$Predicted_Result <- predict(gam_PO, newdata = future_dates, type = "response")
   
 
 A <- ggplot(P.O.wq.data, aes(x = Date, y = Result)) +
   geom_point(alpha = 0.2, col = "#c24f00") +
   geom_rug(sides = "l", alpha = 0.2) +  
-  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="red")+
-  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = "dashed") +
-  labs(title = "GAM Prediction for Orthophosphate",
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
+  ylim(c(0,0.06))+
+#  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
+  labs(title = "Piddle, Orthophosphate",
        x = "Date",
-       y = "Orthophosphate (mg/L)")
+       y = "Orthophosphate (mg/L)")+
+  theme_bw()
 
 
 det="0116"#OrthoP #0116
@@ -421,39 +453,41 @@ P.TotN.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/d
   select(Date,Remark,Result)%>%
   group_by(Date,Remark)%>%
   summarise(Result=mean(Result))%>%
-  arrange(Date) %>% 
-  filter(Date > "2015-01-01")
+  arrange(Date) 
 
 # GAM for Nitrogen
 
-gam_PN <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = P.TotN.wq.data)
+#gam_PN <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = P.TotN.wq.data)
 
 
-future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
+#future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
 
-#Predict
-future_dates$Predicted_Result <- predict(gam_FN, newdata = future_dates, type = "response")
+##Predict
+#future_dates$Predicted_Result <- predict(gam_FN, newdata = future_dates, type = "response")
 
-B <- ggplot(F.TotN.wq.data, aes(x = Date, y = Result)) +
+B <- ggplot(P.TotN.wq.data, aes(x = Date, y = Result)) +
   geom_point(alpha = 0.2, col = "#0073C2FF") +
   geom_rug(sides = "l", alpha = 0.2) +  
-  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="red")+
-  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = "dashed") +
-  labs(title = "GAM Predictions for Total Nitrogen as N",
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
+  ylim(c(0,8))+
+ # geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
+  labs(title = "Piddle, Total Nitrogen as N",
        x = "Date",
-       y = "Tot N (mg/L)")
-
-
+       y = "Tot N (mg/L)")+
+  theme_bw()
 
 plot_grid(A, B) #labels = c("OrthoP", "Tot N"))
 
 
+
 ```
+
+In the river Sherford, we see a decrease in both Orthophosphate and Total Nitrogen since 2000. Total Nitrogen occurs at similar concentrations to the Frome and Piddle and flat lines if the timeseries is clipped to 2015-2025.
 
 ```{r Sherford}
 wqsite<-"SW-50951010"
 
-startDate="2000-01-01"
+startDate="2015-01-01"
 endDate="2025-02-03"
 
 param.units="mg/l"
@@ -484,28 +518,107 @@ Sher.N.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/d
   summarise(Result=mean(Result))%>%
   arrange(Date)
 
-Sher_OP <- ggplot(Sher.O.wq.data, aes(Date, Result)) +
-  geom_point(aes(color = Result)) +
-  scale_x_date(limits = as.Date(c("2015-01-01", "2025-02-03"))) +
-  scale_y_continuous(limits = c(0, 0.04)) +
-  scale_color_gradientn(colors = met.brewer("Derain", direction = -1)) +
-  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), colour = "red") +
-  labs(title = "Orthophosphate, Sherford River At King Bridge",
-       x = "Date", y = "Result (mg/l)") +
+Sher_OP <- ggplot(Sher.O.wq.data, aes(x = Date, y = Result)) +
+  geom_point(alpha = 0.2, col = "#c24f00") +
+  geom_rug(sides = "l", alpha = 0.2) +  
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
+  ylim(c(0,0.06))+
+#  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
+  labs(title = "Sherford, Orthophosphate",
+       x = "Date",
+       y = "Orthophosphate (mg/L)")+
   theme_bw()
 
-
-Sher_N <- ggplot(Sher.N.wq.data, aes(Date, Result)) +
-  geom_point(aes(color = Result)) +
-  scale_x_date(limits = as.Date(c("2000-01-01", "2025-02-03"))) +
- scale_y_continuous(limits = c(2.5, 10)) +
-  scale_color_gradient2(colors = met.brewer("Derain", direction = -1)) +
-  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), colour = "red") +
-  labs(title = "Total N Oxidised, Sherford River At King Bridge",
-       x = "Date", y = "Result (mg/l)") +
+Sher_N <- ggplot(Sher.N.wq.data, aes(x = Date, y = Result)) +
+  geom_point(alpha = 0.2, col = "#0073C2FF") +
+  geom_rug(sides = "l", alpha = 0.2) +  
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
+  ylim(c(0,8))+
+ # geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
+    labs(title = "Sherford, Total Nitrogen as N",
+       x = "Date",
+       y = "Tot N (mg/L)")+
   theme_bw()
+
 
 plot_grid(Sher_OP, Sher_N)
+
+```
+
+The Corfe D/S Corfe STW tells the same story as the river Sherford, with a decrease in both Orthophosphate and Total Nitrogen since 2000. Unlike other rivers which feed Poole Harbour, Corfe river continues to show this decrease, albeit modest from 2015-2025. It records the lowest levels of Orthophosphate of tributaries to Poole Harbour, but is the smallest tributary by drainage volume.
+
+```{r Corfe}
+
+wqsite<-"SW-50900712"
+
+startDate="2015-01-01"
+endDate="2025-02-03"
+
+param.units="mg/l"
+
+det="0118"#OrthoP #0116
+
+#read water quality data from online WQ archive
+C.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+  mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
+  mutate(Date=date(date.time))%>%
+  rename(Result=result)%>%
+  rename(Remark=resultQualifier.notation)%>%
+  select(Date,Remark,Result)%>%
+  group_by(Date,Remark)%>%
+  summarise(Result=mean(Result))%>%
+  arrange(Date)
+
+ # gam_PO <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = P.O.wq.data)
+
+  #Predict
+  #    future_dates$Predicted_Result <- predict(gam_PO, newdata = future_dates, type = "response")
+  
+
+CO <- ggplot(C.O.wq.data, aes(x = Date, y = Result)) +
+  geom_point(alpha = 0.2, col = "#c24f00") +
+  geom_rug(sides = "l", alpha = 0.2) +  
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
+  ylim(c(0,0.06))+
+#  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
+  labs(title = "Corfe, Orthophosphate",
+       x = "Date",
+       y = "Orthophosphate (mg/L)")+
+  theme_bw()
+
+det="0116"#OrthoP #0116
+
+#read water quality data from online WQ archive
+C.TotN.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+  mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
+  mutate(Date=date(date.time))%>%
+  rename(Result=result)%>%
+  rename(Remark=resultQualifier.notation)%>%
+  select(Date,Remark,Result)%>%
+  group_by(Date,Remark)%>%
+  summarise(Result=mean(Result))%>%
+  arrange(Date) 
+# GAM for Nitrogen
+
+#gam_PN <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = P.TotN.wq.data)
+#future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
+
+#Predict
+#future_dates$Predicted_Result <- predict(gam_FN, newdata = future_dates, type = "response")
+
+CN <- ggplot(C.TotN.wq.data, aes(x = Date, y = Result)) +
+  geom_point(alpha = 0.2, col = "#0073C2FF") +
+  geom_rug(sides = "l", alpha = 0.2) +  
+  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
+  ylim(c(0,8))+
+ # geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
+  labs(title = "Corfe, Total Nitrogen as N",
+       x = "Date",
+       y = "Tot N (mg/L)")+
+  theme_bw()
+
+plot_grid(CO, CN) #labels = c("OrthoP", "Tot N"))
+
 
 ```
 
@@ -531,7 +644,6 @@ PH3.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/da
   group_by(Date,Remark)%>%
   summarise(Result=mean(Result))%>%
   arrange(Date)
-
 
 det="9943"#OrthoP #0116
 
