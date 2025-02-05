@@ -240,7 +240,7 @@ leaflet() %>%
   htmlwidgets::onRender(Layers_JS) %>%
   hideGroup("Waterbodies")
 ```
-
+-----------------------------------------------------------------------------------------------------------------------
 ```{r, Overview of monitoring histograms}
 
 TraC.dat = TraC.dat[CAT,]
@@ -298,25 +298,11 @@ plotly::ggplotly(v2)  %>%
 
 ```
 
-## Source Apportionment (SAGIS) Modelling Outputs
-
-The below maps show SAGIS modelling outputs, SAGIS has been jointly developed with UKWIR (the UK Water Industry Research group) since 2010 and is the main water quality catchment modelling tools that are used by environmental regulators in the UK including the EA. Modelling Phosphate data.
-
-The below map shows a baseline for phosphate up until 2024, whilst the map below this shows forecast improvements for 2030.
-
-[![SAGIS Baseline 2024 Outputs](/dbfs/FileStore/WSX_HGray/SAGIS_Baseline_2024.png)](https://eaimportalpoc.esriuk.com/portal/apps/webappviewer/index.html?id=ba893996b8424dda9020194e1d9bebde%20Timeseries%20trends)
-
-![SAGIS Amp9 2024 Outputs](/dbfs/FileStore/WSX_HGray/SAGIS_Amp9_2024.png)
-
 ### Feshwater Nitrogen & Phosphate Trends
 
-Below the nutrients are mapped for the four main feeder rivers to the Harbour, the river Frome exports the most drains an area \~3 times that of the Piddle In the Frome at Holme Bridge we see a decrease in Orthophosphate since 2000 whilst Nitrogen Total flat lines.
+Nutrients are mapped for the four main feeder rivers to the Harbour: the Frome, Piddle, Sherford and Corfe. The river Frome has the largest discharge and drains an area approximatley 3 times that of the Piddle.
 
-'Interim N loading targets for Poole Harbour ®: - Total N loads entering the harbour from non-marine sources should be reduced to 1500 tonnes/N/yr. - Point source loads from WWTW should not exceed 209 tonnes N/yr. - All agricultural N loads should be reduced to c1127 tonnes N/yr. - Other N loads should be delivered as detailed in Table 7.1:1'
-
-![](/dbfs/FileStore/WSX_HGray/Piddle_Tot_N_timeseries.png) ![](/dbfs/FileStore/WSX_HGray/Piddle_N_Tot_mean_normalised_conc.png)
-
-![](/dbfs/FileStore/WSX_HGray/Piddle_total_p_conc_over_time.png)
+In the Frome at Holme Bridge we see no change in either Orthophosphate or Nitrogen Total, however, over a longer time span, we see a decrease in Orthophosphate since 2000 whilst Nitrogen Total remains the same.
 
 ```{r Frome}
 
@@ -400,7 +386,7 @@ plot_grid(FA,FB)
 
 ```
 
-In the Piddle we see the same story since 2000 as the Frome, although Orthophosphate has only since the last 5 years met the levels of reduced Orthophosphate as the Frome.
+In the Piddle we see a reduction in Orthophosphate and no change in Nitrogen over the last 10 years. Since 2000, we see the same story as the Frome, although Orthophosphate has only since the last 5 years met the levels of reduced Orthophosphate as the Frome.
 
 ```{r Piddle}
 wqsite<-"SW-50450129"
@@ -545,7 +531,7 @@ plot_grid(Sher_OP, Sher_N)
 
 ```
 
-The Corfe D/S Corfe STW tells the same story as the river Sherford, with a decrease in both Orthophosphate and Total Nitrogen since 2000. Unlike other rivers which feed Poole Harbour, Corfe river continues to show this decrease, albeit modest from 2015-2025. It records the lowest levels of Orthophosphate of tributaries to Poole Harbour, but is the smallest tributary by drainage volume.
+For the Corfe river at monitoring point Corfe D/S Corfe STW tells the same story as the river Sherford, with a decrease in both Orthophosphate and Total Nitrogen since 2000. Unlike other rivers which feed Poole Harbour, Corfe river continues to show this decrease in both determinants, albeit modest from 2015-2025. It records the lowest levels of Orthophosphate of tributaries to Poole Harbour, but is the smallest tributary by drainage volume.
 
 ```{r Corfe}
 
