@@ -23,9 +23,11 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE, cache=TRUE)
 
 The Environment Agency monitor at 5 locations in Poole Harbour, monitoring is undertaken at five sites (currently under the National Surveillance program) as well as in Poole Harbour Rivers catchment (see below for monitoring sites). Monitoring at Poole Harbour 4 (Poole Bridge) by Poole Harbour Old Town has been dropped by national monitoring programme at the EA from this year but Wessex area team have requested that nutrient monitoring is continued at this site under a local driver.
 
-With regard to macroalgae, we carry out opportunistic macroalgae surveys every three years (next due in 2026). 
+With regard to macroalgae, we carry out opportunistic macroalgae surveys every three years (next due in 2026).
 
 ### Monitoring Sites Map
+
+![Poole Harbour Marine Monitoring Sites](Poole Harbour Mon Sites in Harbour.png){fig-align="center"}
 
 ```{r, monitoring sites map}
 # Monitoring in Poole Harbour
@@ -42,10 +44,13 @@ CDE %<>%
   filter(Operational.Catchment == unique(CAT$OPCAT_NAME)[1]) %>% 
   inner_join(CAT_geo, ., by = c("WB_ID" = "Water.Body.ID"))
 
-
 ```
 
-------------------------------------------------------------------------------
+------------------------------------------------------------------------
+
+### Freshwater Monitoring sites
+
+The below maps show the location of both freshwater and marine monitoring sites with mean total Nitrogen as N (the sum of Nitrate and Nitrite) for the period 2020-2025. 
 
 ```{r}
 # Get monitoring sites from the Harbour
@@ -167,7 +172,7 @@ leaflet() %>%
 
 ```
 
------------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 ```{r TraC Map}
 
@@ -240,7 +245,11 @@ leaflet() %>%
   htmlwidgets::onRender(Layers_JS) %>%
   hideGroup("Waterbodies")
 ```
------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+### Total Marine N in Poole Harbour
+
 ```{r, Overview of monitoring histograms}
 
 TraC.dat = TraC.dat[CAT,]
@@ -298,11 +307,13 @@ plotly::ggplotly(v2)  %>%
 
 ```
 
-### Feshwater Nitrogen & Phosphate Trends
+### Freshwater Nitrogen & Phosphate Trends
 
 Nutrients are mapped for the four main feeder rivers to the Harbour: the Frome, Piddle, Sherford and Corfe. The river Frome has the largest discharge and drains an area approximatley 3 times that of the Piddle.
 
-In the Frome at Holme Bridge we see no change in either Orthophosphate or Nitrogen Total, however, over a longer time span, we see a decrease in Orthophosphate since 2000 whilst Nitrogen Total remains the same.
+#### River Frome
+
+In the Frome at Holme Bridge we see no change in either Orthophophate or Nitrogen Total, however, over a longer time span, we see a decrease in Orthophosphate since 2000 whilst Nitrogen Total remains the same.
 
 ```{r Frome}
 
@@ -386,6 +397,12 @@ plot_grid(FA,FB)
 
 ```
 
+#### River Piddle
+
+The below chart of the Piddle accounts for its discharge, when coupled with flow gauge data, we are able to identify a minor increase in N within the Piddle since the millennium.
+
+![River Piddle Total Nitrogen Concentration Normalised for Flow (2000-2025)](Piddle N Tot mean normalised conc.png){fig-align="center"}
+
 In the Piddle we see a reduction in Orthophosphate and no change in Nitrogen over the last 10 years. Since 2000, we see the same story as the Frome, although Orthophosphate has only since the last 5 years met the levels of reduced Orthophosphate as the Frome.
 
 ```{r Piddle}
@@ -468,6 +485,8 @@ plot_grid(A, B) #labels = c("OrthoP", "Tot N"))
 
 ```
 
+#### River Sherford
+
 In the river Sherford, we see a decrease in both Orthophosphate and Total Nitrogen since 2000. Total Nitrogen occurs at similar concentrations to the Frome and Piddle and flat lines if the timeseries is clipped to 2015-2025.
 
 ```{r Sherford}
@@ -530,6 +549,8 @@ Sher_N <- ggplot(Sher.N.wq.data, aes(x = Date, y = Result)) +
 plot_grid(Sher_OP, Sher_N)
 
 ```
+
+#### Corfe River
 
 For the Corfe river at monitoring point Corfe D/S Corfe STW tells the same story as the river Sherford, with a decrease in both Orthophosphate and Total Nitrogen since 2000. Unlike other rivers which feed Poole Harbour, Corfe river continues to show this decrease in both determinants, albeit modest from 2015-2025. It records the lowest levels of Orthophosphate of tributaries to Poole Harbour, but is the smallest tributary by drainage volume.
 
