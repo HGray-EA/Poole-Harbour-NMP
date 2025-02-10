@@ -248,7 +248,8 @@ leaflet() %>%
 
 ------------------------------------------------------------------------
 
-### Total Marine N in Poole Harbour
+### Total Marine N in Poole Harbour by Site
+This visual displays the same data as above but non-spatially.
 
 ```{r, Overview of monitoring histograms}
 
