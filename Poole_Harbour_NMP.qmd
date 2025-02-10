@@ -17,6 +17,8 @@ format:
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE, cache=TRUE)
 #| warning: false
 #| echo: false
+
+
 ```
 
 ### Introduction
@@ -52,9 +54,11 @@ CDE %<>%
 
 The below maps show the location of both freshwater and marine monitoring sites with mean total Nitrogen as N (the sum of Nitrate and Nitrite) for the period 2020-2025. 
 
-```{r}
-# Get monitoring sites from the Harbour
+```{r, Freshwater Mon Sites}
 
+# Get monitoring sites from the Harbour
+  # Timesout
+options(timeout = 1000)
 startDate="2015-01-01"
 endDate="2025-02-03"
 
@@ -62,7 +66,20 @@ param.units="mg/l"
 
 det="9943" #	Nitrogen, Total Oxidised as N
 #read water quality data from online WQ archive
-wd<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?area=6-28&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)
+
+  #Mon_Sites <- read.csv("/dbfs/mnt/lab/unrestricted/harry.gray@environment-agency.gov.uk/CEP/ETL_Exports/WIMS_Most_Recent.csv")
+  
+#Mon_Sites_All <-   Mon_Sites %>% st_as_sf(., coords=c("sample.samplingPoint.notation","long"), crs=4326) #%>% 
+ #                   mutate(Date = as.Date(sample.sampleDateTime)) %>%               
+  #                      filter(Date > "2020-01-01") %>% 
+   #                        group_by(sample.samplingPoint.notation) %>% 
+    #                       mutate(
+     #                       Mean_N = round(mean(result),2),
+      #                      Mean_Count = n()
+       #                     ) %>% 
+        #                   ungroup()
+
+wd<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?area=6-28&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=999999"),stringsAsFactors=FALSE)
 
 TraC.dat <- wd %>% mutate(
                easting = as.numeric(sample.samplingPoint.easting),
@@ -174,7 +191,7 @@ leaflet() %>%
 
 ------------------------------------------------------------------------
 
-```{r TraC Map}
+```{r, TraC Map}
 
 # Define log-scaled bins for numeric data
 bins <-c(0,0.02,0.05,0.1,0.5,1,2,Inf)
@@ -291,8 +308,6 @@ v2 <- ggplot(Trac.dat_22_25, aes(x = sample.samplingPoint.label, y = result)) +
 #a <- ggplot(WIMS_p, aes(x= WB_NAME, y=result, col=result))+
 #  geom_point()+theme(axis.text.x = element_text(angle=90, size=5))+labs(y= "Orthophosphate (mg/L)", x= "Waterbodies")
 
-
-
 plotly::ggplotly(v2)  %>%
   plotly::layout(
     annotations = list(
@@ -316,7 +331,8 @@ Nutrients are mapped for the four main feeder rivers to the Harbour: the Frome, 
 
 In the Frome at Holme Bridge we see no change in either Orthophophate or Nitrogen Total, however, over a longer time span, we see a decrease in Orthophosphate since 2000 whilst Nitrogen Total remains the same.
 
-```{r Frome}
+:::{panel.tabset}
+```{r, Frome}
 
 library(MetBrewer)
 library(mgcv) 
@@ -340,24 +356,14 @@ FR.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/dat
   select(Date,Remark,Result)%>%
   group_by(Date,Remark)%>%
   summarise(Result=mean(Result))%>%
-  arrange(Date) 
+  arrange(Date)
 
-#  gam_PO <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = FR.O.wq.data)
+# GAM
+  gam_PO <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = FR.O.wq.data)
 
-  #Predict
- #     future_dates$Predicted_Result <- predict(gam_PO, newdata = future_dates, type = "response")
-  
-
-FA <- ggplot(FR.O.wq.data, aes(x = Date, y = Result)) +
-  geom_point(alpha = 0.2, col = "#c24f00") +
-  geom_rug(sides = "l", alpha = 0.2) +  
-  stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
- # ylim(c(0,0.06))+
-#  geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
-  labs(title = "Frome, Orthophosphate",
-       x = "Date",
-       y = "Orthophosphate (mg/L)")+
-  theme_bw()
+#Predict
+  future_dates$Predicted_Result <- predict(gam_PO, newdata = future_dates, type = "response")
+  FR.O.wq.data$fitted_values <- predict(gam_PO)
 
 
 det="0116"#OrthoP #0116
@@ -374,18 +380,21 @@ FR.TotN.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/
   arrange(Date) 
 
 # GAM for Nitrogen
+gam_FN <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = FR.TotN.wq.data)
 
-#gam_FN <- gam(Result ~ s(as.numeric(Date), bs = "cs"), data = FR.TotN.wq.data)
-
-
-#future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
+future_dates <- data.frame(Date = seq(as.Date("2025-02-04"), as.Date("2030-12-31"), by = "month"))
 
 #Predict
-#future_dates$Predicted_Result <- predict(gam_FN, newdata = future_dates, type = "response")
+FR.TotN.wq.data$fitted_values <- predict(gam_FN)
+
+future_dates$Predicted_Result <- predict(gam_FN, newdata = future_dates, type = "response")
 
 FB <- ggplot(FR.TotN.wq.data, aes(x = Date, y = Result)) +
   geom_point(alpha = 0.2, col = "#0073C2FF") +
   geom_rug(sides = "l", alpha = 0.2) +  
+  geom_line(aes(y=fitted_values), col="purple")
+  
+  
   stat_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, col="seagreen")+
   ylim(c(0,8))+
  # geom_line(data = future_dates, aes(x = Date, y = Predicted_Result), col = "darkred", alpha = 0.8, linetype = #"dashed") +
@@ -398,6 +407,52 @@ plot_grid(FA,FB)
 
 ```
 
+```{r, Rolling Mean Plots Frome}
+
+  
+# GAM Okay but stakeholders want more resolution.  
+# Define rolling mean function
+
+      n=3
+      
+      ma <- function(x, n) {
+        stats::filter(x, rep(1 / n, n), sides = 2)
+      }
+      
+      # Apply rolling mean to the 'Result' column
+      FR.O.wq.data$rolling_mean <- ma(FR.O.wq.data$Result, n)
+      
+ Roll_FA <-  ggplot(FR.O.wq.data, aes(x = Date, y = Result)) +
+        geom_point(alpha = 0.2, col = "#c24f00") +
+        geom_rug(sides = "l", alpha = 0.2) +  
+      # ylim(c(0,0.06))+
+        geom_line(aes(y = rolling_mean), col = "seagreen", alpha = 0.8, linetype = "solid") +
+        labs(title = "Frome, Orthophosphate",
+             x = "Date",
+             y = "Orthophosphate (mg/L)")+
+        theme_bw()
+
+ # Total Nitrogen
+ 
+      FR.TotN.wq.data$rolling_mean <- ma(FR.TotN.wq.data$Result, n)
+ 
+  Roll_FB <-  ggplot(FR.TotN.wq.data, aes(x = Date, y = Result)) +
+        geom_point(alpha = 0.2, col = "#0073C2FF") +
+        geom_rug(sides = "l", alpha = 0.2) +  
+        ylim(c(0,8))+
+        geom_line(aes(y = rolling_mean), col = "seagreen", alpha = 0.8, linetype = "solid") +
+      labs(title = "Frome, Total Nitrogen as N",
+       x = "Date",
+       y = "Tot N (mg/L)")+
+        theme_bw()
+
+ 
+  plot_grid(Roll_FA, Roll_FB)
+   
+```
+:::
+
+
 #### River Piddle
 
 The below chart of the Piddle accounts for its discharge, when coupled with flow gauge data, we are able to identify a minor increase in N within the Piddle since the millennium.
@@ -405,6 +460,8 @@ The below chart of the Piddle accounts for its discharge, when coupled with flow
 ![River Piddle Total Nitrogen Concentration Normalised for Flow (2000-2025)](Piddle N Tot mean normalised conc.png){fig-align="center"}
 
 In the Piddle we see a reduction in Orthophosphate and no change in Nitrogen over the last 10 years. Since 2000, we see the same story as the Frome, although Orthophosphate has only since the last 5 years met the levels of reduced Orthophosphate as the Frome.
+
+:::{.panel-tabset}
 
 ```{r Piddle}
 wqsite<-"SW-50450129"
@@ -432,7 +489,6 @@ P.O.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data
 
   #Predict
  #     future_dates$Predicted_Result <- predict(gam_PO, newdata = future_dates, type = "response")
-  
 
 A <- ggplot(P.O.wq.data, aes(x = Date, y = Result)) +
   geom_point(alpha = 0.2, col = "#c24f00") +
@@ -486,10 +542,48 @@ plot_grid(A, B) #labels = c("OrthoP", "Tot N"))
 
 ```
 
+```{r, Rolling Mean Plot Piddle}
+
+
+      # Apply rolling mean to the 'Result' column
+      P.O.wq.data$rolling_mean <- ma(P.O.wq.data$Result, n)
+      
+ Roll_PA <-  ggplot(P.O.wq.data, aes(x = Date, y = Result)) +
+        geom_point(alpha = 0.2, col = "#c24f00") +
+        geom_rug(sides = "l", alpha = 0.2) +  
+      # ylim(c(0,0.06))+
+        geom_line(aes(y = rolling_mean), col = "seagreen", alpha = 0.8, linetype = "solid") +
+        labs(title = "Frome, Orthophosphate",
+             x = "Date",
+             y = "Orthophosphate (mg/L)")+
+        theme_bw()
+
+ # Total Nitrogen
+ 
+      P.TotN.wq.data$rolling_mean <- ma(P.TotN.wq.data$Result, n)
+ 
+  Roll_PB <-  ggplot(P.TotN.wq.data, aes(x = Date, y = Result)) +
+        geom_point(alpha = 0.2, col = "#0073C2FF") +
+        geom_rug(sides = "l", alpha = 0.2) +  
+        ylim(c(0,8.6))+
+        geom_line(aes(y = rolling_mean), col = "seagreen", alpha = 0.8, linetype = "solid") +
+      labs(title = "Frome, Total Nitrogen as N",
+       x = "Date",
+       y = "Tot N (mg/L)")+
+        theme_bw()
+
+ 
+  plot_grid(Roll_PA, Roll_PB)
+   
+```
+:::
+
 #### River Sherford
 
 In the river Sherford, we see a decrease in both Orthophosphate and Total Nitrogen since 2000. Total Nitrogen occurs at similar concentrations to the Frome and Piddle and flat lines if the timeseries is clipped to 2015-2025.
 
+
+:::{.panel-tabset}
 ```{r Sherford}
 wqsite<-"SW-50951010"
 
@@ -551,9 +645,48 @@ plot_grid(Sher_OP, Sher_N)
 
 ```
 
+```{r, Rolling Mean Plot Sherford}
+
+
+      # Apply rolling mean to the 'Result' column
+      Sher.O.wq.data$rolling_mean <- ma(Sher.O.wq.data$Result, n)
+      
+ Roll_SA <-  ggplot(Sher.O.wq.data, aes(x = Date, y = Result)) +
+        geom_point(alpha = 0.2, col = "#c24f00") +
+        geom_rug(sides = "l", alpha = 0.2) +  
+      # ylim(c(0,0.06))+
+        geom_line(aes(y = rolling_mean), col = "seagreen", alpha = 0.8, linetype = "solid") +
+        labs(title = "Frome, Orthophosphate",
+             x = "Date",
+             y = "Orthophosphate (mg/L)")+
+        theme_bw()
+
+ # Total Nitrogen
+ 
+      Sher.N.wq.data$rolling_mean <- ma(Sher.N.wq.data$Result, n)
+ 
+  Roll_SB <-  ggplot(Sher.N.wq.data, aes(x = Date, y = Result)) +
+        geom_point(alpha = 0.2, col = "#0073C2FF") +
+        geom_rug(sides = "l", alpha = 0.2) +  
+        ylim(c(0,8))+
+        geom_line(aes(y = rolling_mean), col = "seagreen", alpha = 0.8, linetype = "solid") +
+      labs(title = "Frome, Total Nitrogen as N",
+       x = "Date",
+       y = "Tot N (mg/L)")+
+        theme_bw()
+
+ 
+  plot_grid(Roll_SA, Roll_SB)
+   
+```
+
+:::
+
 #### Corfe River
 
 For the Corfe river at monitoring point Corfe D/S Corfe STW tells the same story as the river Sherford, with a decrease in both Orthophosphate and Total Nitrogen since 2000. Unlike other rivers which feed Poole Harbour, Corfe river continues to show this decrease in both determinants, albeit modest from 2015-2025. It records the lowest levels of Orthophosphate of tributaries to Poole Harbour, but is the smallest tributary by drainage volume.
+
+:::{.panel-tabset}
 
 ```{r Corfe}
 
@@ -630,6 +763,42 @@ plot_grid(CO, CN) #labels = c("OrthoP", "Tot N"))
 
 ```
 
+```{r, Rolling Mean Plot Corfe}
+
+      # Apply rolling mean to the 'Result' column
+      C.O.wq.data$rolling_mean <- ma(C.O.wq.data$Result, n)
+      
+ Roll_CA <-  ggplot(C.O.wq.data, aes(x = Date, y = Result)) +
+        geom_point(alpha = 0.2, col = "#c24f00") +
+        geom_rug(sides = "l", alpha = 0.2) +  
+      # ylim(c(0,0.06))+
+        geom_line(aes(y = rolling_mean), col = "seagreen", alpha = 0.8, linetype = "solid") +
+        labs(title = "Frome, Orthophosphate",
+             x = "Date",
+             y = "Orthophosphate (mg/L)")+
+        theme_bw()
+
+ # Total Nitrogen
+ 
+      C.TotN.wq.data$rolling_mean <- ma(C.TotN.wq.data$Result, n)
+ 
+  Roll_CB <-  ggplot(C.TotN.wq.data, aes(x = Date, y = Result)) +
+        geom_point(alpha = 0.2, col = "#0073C2FF") +
+        geom_rug(sides = "l", alpha = 0.2) +  
+        ylim(c(0,8))+
+        geom_line(aes(y = rolling_mean), col = "seagreen", alpha = 0.8, linetype = "solid") +
+      labs(title = "Frome, Total Nitrogen as N",
+       x = "Date",
+       y = "Tot N (mg/L)")+
+        theme_bw()
+
+ 
+  plot_grid(Roll_CA, Roll_CB)
+   
+```
+:::
+
+
 ```{r, Poole Harbour 3 Hutchins Buoy}
 
 wqsite<-"SW-50950249"
@@ -687,5 +856,5 @@ PH3_N <- ggplot(PH3.N.wq.data, aes(Date, Result)) +
        x = "Date", y = "Result (mg/l)") +
   theme_bw()
 
-plot_grid(PH3_OP, PH3_N)
+#plot_grid(PH3_OP, PH3_N)
 ```
