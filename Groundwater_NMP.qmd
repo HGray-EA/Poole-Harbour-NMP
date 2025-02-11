@@ -1,0 +1,193 @@
+---
+title: "Groundwater Trends"
+format:
+  html:
+    theme: flatly
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    code-tools: false
+    fig-cap: true
+    title-block-banner: false
+---
+```{r}
+
+# Groundwater Sites
+wqsite <- c("5057GW01,5058GW05,
+            5058GW01,
+            5058GW04,
+            5056GW05,
+            5059GW01,
+            5043GW06,
+            5044GW06,
+            5042GW02,
+            5041GW03,
+            5041GW01,
+            5055GW05,
+            5095GW02,
+            5045GW01,
+            5059GW04")
+
+```
+
+
+
+```{r}
+det="0117"#Nitrate
+          #0118 Orthophos
+          # 0116 Tot N
+
+#read water quality data from online WQ archive
+GW.wq.data<-read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+  mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
+  mutate(Date=date(date.time))%>%
+  rename(Result=result)%>%
+  rename(Remark=resultQualifier.notation)%>%
+  select(Date,Remark,Result)%>%
+  group_by(Date,Remark)%>%
+  summarise(Result=mean(Result))%>%
+  arrange(Date) 
+
+
+##
+                       Sites <- gsub("^", "SW-", wqsite)
+
+                       
+startDate="2015-01-01"
+endDate="2025-02-03"
+
+param.units="mg/l"
+det = "0117"
+                           
+                         read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",Sites,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+                          mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
+                          mutate(Date=date(date.time))%>%
+                          rename(Result=result)%>%
+                          rename(Remark=resultQualifier.notation)%>%
+                          select(Date,Remark,Result)%>%
+                          group_by(Date,Remark)%>%
+                          summarise(Result=mean(Result))%>%
+                          arrange(Date) 
+                                         
+                          
+                         
+library(dplyr)
+library(lubridate)
+library(readr)
+
+# Define parameters
+startDate <- "2015-01-01"
+endDate <- "2025-02-03"
+param.units <- "mg/l"
+det <- "0117"
+
+master <- data.frame()
+
+                         wqsite <- c("5057GW01,5058GW05,
+                        5058GW01,
+                        5058GW04,
+                        5056GW05,
+                        5059GW01,
+                        5043GW06,
+                        5044GW06,
+                        5042GW02,
+                        5041GW03,
+                        5041GW01,
+                        5055GW05,
+                        5095GW02,
+                        5045GW01,
+                        5059GW04")
+                         
+                        wqsite <- unlist(strsplit(gsub("\\s+", "", wqsite), ","))
+                        print(wqsite)
+
+# Ensure Sites is formatted correctly
+Sites_query <- paste0("SW-", wqsite)  # Add prefix if needed
+
+for(x in Sites_query){
+  df <- read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?",
+                        "samplingPoint=", x,
+                        "&determinand=", det,
+                        "&startDate=", startDate,
+                        "&endDate=", endDate,
+                        "&_limit=99999"),
+                 stringsAsFactors = FALSE)
+
+            # Process the data
+            df <- df %>%
+              mutate(date.time = ymd_hms(sample.sampleDateTime, tz = "Europe/London"),
+                     Date = as.Date(date.time)) %>%
+              rename(Result = result,
+                     Remark = resultQualifier.notation) %>%
+              select(Date, Remark, Result) %>%
+              group_by(Date, Remark) %>%
+              summarise(Result = mean(Result, na.rm = TRUE), .groups = "drop") %>%
+              arrange(Date)
+            
+            master <- bind_rows(master, df)
+}                    
+                                     
+                                     
+                         
+                         
+                         
+                         
+                         
+                         
+                         
+                         
+                                    
+                               
+ #  
+                                       #  determinand.definition=="Nitrogen, Total as N",
+                                       library(tidyquant)
+                                       library(zoo)
+                                       MPs
+                                      #Orthophosphate, reactive as P
+                                       #Nitrogen, Total as N
+                                       lims <- as_datetime(c("2015-01-01 10:00:00","2025-02-03 10:00:00"))
+                                       
+                                     for( x in unique(wqsite)){
+                                      read.csv(paste0("https://environment.data.gov.uk/water-quality/data/measurement.csv?samplingPoint=",wqsite,"&determinand=",det,"&startDate=",startDate,"&endDate=",endDate,"&_limit=99999"),stringsAsFactors=FALSE)%>%
+  mutate(date.time=ymd_hms(sample.sampleDateTime,tz="Europe/London"))%>%
+  mutate(Date=date(date.time))%>%
+  rename(Result=result)%>%
+  rename(Remark=resultQualifier.notation)%>%
+  select(Date,Remark,Result)%>%
+  group_by(Date,Remark)%>%
+  summarise(Result=mean(Result))%>%
+  arrange(Date) 
+                                       
+                                       
+                                       
+                                            ) %>% 
+                                           group_by(Year) %>% 
+                                           mutate(
+                                             year_mean = mean(result)
+                                           )
+                                    
+                                         print(I$determinand.unit.label) 
+                                         
+                              ####     
+                                       oi <- ggplot(data=I,aes(x=date_time, y=ugL)) +
+                                       geom_point(col="#0F52BA") +
+                                        labs(
+                                         y= paste0(I$determinand.definition," (", "ug/L",")"),
+                                         x = "Date",
+                                         title= paste0(I$sample.samplingPoint.label, ", ",I$determinand.definition),
+                                         caption= "Data accessed from EA Open Data WIMS, Mar 2024"
+                                       ) +
+                                         tidyquant::geom_ma(ma_fun=SMA, n=12, size=1,color="#a40000")+
+                                       scale_x_datetime(date_breaks = "year", date_labels = "%Y", limits= lims) +
+                                       theme_bw()+
+                 
+                                       theme(axis.title = element_text())
+                                print(oi)
+              
+                                     }
+  
+                                       
+```
+
